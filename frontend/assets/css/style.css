@@ -1,0 +1,211 @@
+/* 기본 & 폰트 설정 */
+body, h1, h2, h3, h4, h5, h6 {
+    font-family: "Raleway", sans-serif, "Malgun Gothic", "맑은 고딕", sans-serif;
+}
+body {
+    background-color: #f1f1f1;
+    margin: 0;
+}
+
+/* 레이아웃 */
+.w3-content {
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-top: 2rem; /* 네비게이션 바 대신 콘텐츠에 상단 여백 추가 */
+}
+.w3-row:after, .w3-row:before {
+    content: "";
+    display: table;
+    clear: both;
+}
+.w3-col {
+    float: left;
+    width: 100%;
+    padding: 0 8px;
+    box-sizing: border-box;
+}
+
+/* 반응형 그리드 */
+@media (min-width:993px) {
+    .l8 { width: 66.66666%; }
+    .l4 { width: 33.33333%; }
+}
+
+/* 카드 스타일 */
+.w3-card-4 {
+    box-shadow: 0 4px 10px 0 rgba(0,0,0,0.2), 0 4px 20px 0 rgba(0,0,0,0.19);
+}
+.w3-white {
+    color: #000 !important;
+    background-color: #fff !important;
+}
+.w3-container {
+    padding: 0.01em 16px;
+}
+.w3-container h3, .w3-container h4 {
+    font-weight: 600;
+}
+.w3-opacity {
+    opacity: 0.60;
+}
+.w3-margin {
+    margin: 16px 0;
+}
+.w3-padding {
+    padding: 8px 16px !important;
+}
+.w3-padding-large {
+    padding: 12px 24px !important;
+}
+.w3-padding-32 {
+    padding-top: 32px !important;
+    padding-bottom: 32px !important;
+}
+
+/* 버튼 & 태그 */
+.w3-button {
+    border: none;
+    display: inline-block;
+    padding: 8px 16px;
+    vertical-align: middle;
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    background-color: inherit;
+    text-align: center;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.w3-border {
+    border: 1px solid #ccc !important;
+}
+
+/* 헤더 & 네비게이션 */
+.w3-center { text-align: center !important; }
+.navbar {
+    background-color: #ffffff;
+    border-bottom: 1px solid #e9ecef;
+    padding: 0.5rem 1rem;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+}
+.navbar .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.nav-brand { font-weight: bold; font-size: 1.25rem; color: #212529; text-decoration: none; }
+.nav-links a, .nav-auth a, .nav-auth span, .nav-auth button {
+    color: #495057;
+    text-decoration: none;
+    padding: 0.5rem;
+    margin-left: 0.5rem;
+    vertical-align: middle;
+    font-size: 0.95rem;
+}
+.nav-auth{padding-right: 30px;}
+.nav-links a:hover, .nav-auth a:hover { color: #007bff; }
+.nav-auth button {
+    background: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 0.5rem 0.75rem;
+}
+.nav-auth button:hover { background: #5a6268; }
+
+/* 폼 스타일 */
+.form-container {
+    background: #ffffff;
+    padding: 2.5rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    max-width: 500px;
+    margin: 3rem auto;
+}
+.form-container h1 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+.form-container div {
+    margin-bottom: 1.25rem;
+}
+.form-container label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+.form-container input, .form-container textarea {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 1rem;
+}
+.form-container input:focus, .form-container textarea:focus {
+    outline: none;
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+.form-container button {
+    width: 100%;
+    padding: 0.8rem;
+    border: none;
+    border-radius: 4px;
+    background-color: #0d6efd;
+    color: white;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.form-container button:hover {
+    background-color: #0b5ed7;
+}
+
+/* 버튼 */
+.btn {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    border-radius: 4px;
+    text-decoration: none;
+    cursor: pointer;
+    text-align: center;
+    border: 1px solid transparent;
+}
+.btn-primary { color: #fff; background-color: #0d6efd; border-color: #0d6efd; }
+.btn-secondary { color: #fff; background-color: #6c757d; border-color: #6c757d; }
+.btn-danger { color: #fff; background-color: #dc3545; border-color: #dc3545; }
+
+/* 카드 (게시물, 블로그) */
+.card {
+    background: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+.card-header, .card-footer {
+    padding: 1rem 1.5rem;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+.card-footer {
+    border-top: 1px solid #dee2e6;
+    border-bottom: none;
+    text-align: right;
+}
+.card-body {
+    padding: 1.5rem;
+    line-height: 1.6;
+}
+.post-meta {
+    font-size: 0.9em;
+    color: #6c757d;
+}
