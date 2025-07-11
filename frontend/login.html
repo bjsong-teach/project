@@ -57,6 +57,7 @@
 
         const formData = new FormData(e.target);
         const data = Object.fromEntries(formData.entries());
+        
 
         try {
             const response = await fetch('/api/auth/login', {
@@ -64,7 +65,8 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
-
+            console.log(data);
+            
             if (response.ok) {
                 window.location.href = '/index.html';
             } else {
@@ -72,7 +74,7 @@
                 errorEl.innerText = errorData.detail || "로그인에 실패했습니다.";
             }
         } catch(error) {
-             errorEl.innerText = '서버와 통신할 수 없습니다.';
+            errorEl.innerText = '서버와 통신할 수 없습니다.';
         }
     });
 </script>

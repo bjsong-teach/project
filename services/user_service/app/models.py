@@ -15,9 +15,13 @@ class UserCreate(SQLModel):
     password : str
     bio: Optional[str] = None
 
+class Userlogin(SQLModel):
+    email : str
+    password : str
+        
 class UserPublic(SQLModel):
     id: int
     username: str
     email: str
     bio: Optional[str] = None
-    profile_image_filename: Optional[str] = None
+    profile_image_url: Optional[str] = None

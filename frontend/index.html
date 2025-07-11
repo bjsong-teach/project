@@ -84,12 +84,19 @@
             aboutMeCard.style.display = 'none';
             return;
         }
+        
         aboutMeCard.innerHTML = `
-            <div class="w3-card-4 w3-margin w3-white">
-                <img src="${user.profile_image_url}" alt="My Photo" style="width:100%">
-                <div class="w3-container">
-                    <h4><b>${user.username}</b></h4>
-                    <p>${user.bio || '자기소개를 입력해주세요.'}</p>
+            <div class="profile-card">
+                <img src="${user.profile_image_url}" alt="내 사진">
+                <div class="profile-content">
+                    
+                    <div class="profile-header">
+                        <h4><b>${user.username}</b></h4>
+                        <a href="profile_edit.html" class="edit-link">정보수정</a>
+                    </div>
+                    
+                    <p class="profile-bio">${user.bio || '자기소개를 입력해주세요.'}</p>
+                    
                 </div>
             </div>
         `;

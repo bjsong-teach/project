@@ -1,15 +1,15 @@
 import os
-from typing import Annotated
-from fastapi import FastAPI, status, Response, Depends, HTTPException
+from typing import Annotated, Optional
+from fastapi import FastAPI, status, Response, Depends, HTTPException, Cookie
 from fastapi.staticfiles import StaticFiles
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from redis.asyncio import Redis
 
-from models import User, UserCreate, UserPublic
+from models import User, UserCreate, UserPublic, Userlogin
 from database import init_db, get_session
 from redis_client import get_redis
-from auth import get_password_hash, create_session
+from auth import get_password_hash, create_session, verify_password, get_user_id_from_session, delete_session
 app = FastAPI(title="User Service")
 
 STATIC_DIR = "/app/static"
@@ -26,7 +26,7 @@ def create_user_public(user: User) -> UserPublic:
     if user.profile_image_filename:
         image_url = f"/static/profiles/{user.profile_image_filename}" 
     else:
-         image_url = "https://www.w3schools.com/w3images/avatar_g.jpg"
+        image_url = "https://www.w3schools.com/w3images/avatar_g.jpg"
     '''
 
 @app.on_event("startup")
@@ -45,30 +45,79 @@ async def register_user(
     redis: Annotated[Redis, Depends(get_redis)]
 ):
     #username='111' email='3R#SDAF@DSAF.COM' password='111' bio='FDSDFSA '
-    print(user_data)
+    #print(user_data)
     statement = select(User).where(User.email==user_data.email)
     exist_user_result = await session.exec(statement)
-    print(user_data)
+    #print(user_data)
     if exist_user_result.one_or_none():
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="이미 사용중인 이메일 입니다.")
     
     hashed_password = get_password_hash(user_data.password)
     new_user = User.model_validate(user_data, update={"hashed_password": hashed_password})
-
+    
     session.add(new_user)
     await session.commit()
     await session.refresh(new_user)
-
+    if not new_user.id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="데이터 저장에 실패 했습니다.")
     session_id = await create_session(redis, new_user.id)
     response.set_cookie(key="session_id", value=session_id, httponly=True, samesite="lax", max_age=3600, path="/")
 
     return create_user_public(new_user)
     
-'''
-    new_user = User(
-        username = user_data.username,
-        email =  user_data.email,
-        bio = user_data.bio,
-        hashed_password = hashed_password
-    )
-'''
+@app.post("/api/auth/login")
+async def login(
+    response: Response,
+    user_data: Userlogin,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    redis: Annotated[Redis, Depends(get_redis)]
+):
+    statement = select(User).where(User.email==user_data.email)
+    user_result = await session.exec(statement)
+    user = user_result.one_or_none()
+    
+    if not user or not verify_password(user_data.password, user.hashed_password):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="이메일 또는 비밀번호가 틀립니다.")
+    if user.id is not None:
+        session_id = await create_session(redis, user.id)
+    else:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="세션 번호가 저장되지 않았습니다.")
+    response.set_cookie(key="session_id", value=session_id, httponly=True, samesite="lax", max_age=3600, path="/")
+    return {"message":"Login 성공!"}
+
+@app.get("/api/auth/me", response_model=UserPublic)
+async def get_current_user(
+    response: Response,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    redis: Annotated[Redis, Depends(get_redis)],
+    session_id: Annotated[Optional[str], Cookie()] = None
+):
+    if not session_id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+    
+    user_id = await get_user_id_from_session(redis, session_id)
+    
+    if not user_id:
+        response.delete_cookie("session_id", path="/")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found redis session")
+    
+    user = await session.get(User, int(user_id))
+    
+    if not user:
+        response.delete_cookie("session_id", path="/")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+    
+    return create_user_public(user)
+
+@app.post("/api/auth/logout")
+async def logout(
+    response: Response,
+    redis: Annotated[Redis, Depends(get_redis)],
+    session_id: Annotated[Optional[str], Cookie()] = None
+):
+    if session_id:
+        await delete_session(redis, session_id)
+    response.delete_cookie("session_id", path="/")
+    return {"message": "Logout 성공"}
+
+

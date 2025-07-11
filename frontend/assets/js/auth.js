@@ -44,10 +44,11 @@ async function renderNavbar() {
             await fetch(`${API_URL}/auth/logout`, { 
                 method: 'POST',
                 credentials: 'include'
-             });
+            });
             // 브라우저에서도 쿠키를 확실히 삭제
             document.cookie = "session_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
             window.location.href = '/index.html';
+        
         });
     } else { // 로그인되지 않은 경우
         authLinks.innerHTML = `

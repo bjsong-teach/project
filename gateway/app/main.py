@@ -39,4 +39,4 @@ async def reverse_proxy(request : Request):
             headers=rp_resp.headers
         )
     except httpx.ConnectError:
-        raise HTTPException(Status_code=503, detail="Service unavailable")
+        raise HTTPException(status_code=503, detail="Service unavailable")
