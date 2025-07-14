@@ -7,7 +7,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from redis.asyncio import Redis
 
-from models import User, UserCreate, UserPublic, Userlogin, UserUpdate
+from models import User, UserCreate, UserPublic, Userlogin, UserUpdate, UpdatePassword
 from database import init_db, get_session
 from redis_client import get_redis
 from auth import get_password_hash, create_session, verify_password, get_user_id_from_session, delete_session
@@ -188,5 +188,25 @@ async def upload_my_profile_image(
     await session.refresh(db_user)
     return create_user_public(db_user)
     
+@app.post("/api/auth/change-password", status_code=status.HTTP_204_NO_CONTENT)
+async def change_password(
+    password_data: UpdatePassword,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    redis: Annotated[Redis, Depends(get_redis)],
+    user_id: Annotated[int, Depends(get_current_user_id)],
+    session_id: Annotated[Optional[str], Cookie()] = None
+):
+    db_user = await session.get(User, user_id)
+    if not db_user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="사용자가 없습니다.")
+    
+    if not verify_password(password_data.current_password, db_user.hashed_password):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="비밀번호가 다릅니다.")
+    
+    db_user.hashed_password = get_password_hash(password_data.new_password)
+    await session.commit()
 
-
+    if session_id:
+        await delete_session(redis, session_id)
+        
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
