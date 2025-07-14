@@ -32,7 +32,7 @@ async function renderNavbar() {
     if (!authLinks) return;
 
     const user = await getCurrentUser();
-    
+    console.log(user);
     if (user) { // 로그인된 경우
         authLinks.innerHTML = `
             <span class="navbar-text">환영합니다, ${user.username}님!</span>
