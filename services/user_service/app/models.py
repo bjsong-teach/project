@@ -15,6 +15,10 @@ class UserCreate(SQLModel):
     password : str
     bio: Optional[str] = None
 
+class UserUpdate(SQLModel):
+    username: Optional[str] = None
+    bio: Optional[str] = None
+    
 class Userlogin(SQLModel):
     email : str
     password : str

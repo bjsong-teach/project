@@ -23,3 +23,4 @@ async def get_user_id_from_session(redis: Redis, session_id:str) -> Optional[int
     user_id = await redis.get(f"session:{session_id}")
     return user_id if user_id else None
 
+

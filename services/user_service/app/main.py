@@ -1,4 +1,5 @@
 import os
+import uuid
 from typing import Annotated, Optional
 from fastapi import FastAPI, status, Response, Depends, HTTPException, Cookie, UploadFile, File, Header
 from fastapi.staticfiles import StaticFiles
@@ -6,7 +7,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from redis.asyncio import Redis
 
-from models import User, UserCreate, UserPublic, Userlogin
+from models import User, UserCreate, UserPublic, Userlogin, UserUpdate
 from database import init_db, get_session
 from redis_client import get_redis
 from auth import get_password_hash, create_session, verify_password, get_user_id_from_session, delete_session
@@ -28,6 +29,17 @@ def create_user_public(user: User) -> UserPublic:
     else:
         image_url = "https://www.w3schools.com/w3images/avatar_g.jpg"
     '''
+
+async def get_current_user_id(
+    session_id: Annotated[str | None, Cookie()] = None,
+    redis: Annotated[Redis, Depends(get_redis)] = None,
+) -> int:
+    if not session_id:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    user_id_str = await get_user_id_from_session(redis, session_id)
+    if not user_id_str:
+        raise HTTPException(status_code=401, detail="Invalid session")
+    return int(user_id_str)
 
 @app.on_event("startup")
 async def on_startup():
@@ -131,19 +143,50 @@ async def get_user_by_id(
     
     return create_user_public(user)
 
+@app.patch("/api/users/me", response_model=UserPublic)
+async def update_my_profile(
+    user_data: UserUpdate,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    user_id: Annotated[int, Depends(get_current_user_id)],
+):
+    """로그인된 사용자의 프로필(이메일, 자기소개) 수정"""
+    db_user = await session.get(User, user_id)
+    if not db_user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    # 제공된 데이터만 업데이트
+    update_data = user_data.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(db_user, key, value)
+    
+    await session.commit()
+    await session.refresh(db_user)
+    return create_user_public(db_user)
+    
+    
 @app.post("/api/users/me/upload-image", response_model=UserPublic)
 async def upload_my_profile_image(
     session: Annotated[AsyncSession, Depends(get_session)],
-    user_id : Annotated[int, Header(alias="X-User-ID")],
+    user_id : Annotated[int, Depends(get_current_user_id)],
     file: UploadFile
 ):
+    print(user_id)
+    print(file)
     db_user = await session.get(User, user_id)
     if not db_user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="사용자가 없습니다.")
     
     file_extension = os.path.splitext(file.filename)[1]
-    unique_filenam = f"{uuid.uuid4(){file_extension}}"
+    unique_filenam = f"{uuid.uuid4()}{file_extension}"
     file_path = os.path.join(PROFILE_IMAGE_DIR, unique_filenam)
+    
+    with open(file_path, "wb") as buffer:
+        buffer.write(await file.read())
+        
+    db_user.profile_image_filename = unique_filenam
+    await session.commit()
+    await session.refresh(db_user)
+    return create_user_public(db_user)
     
 
 

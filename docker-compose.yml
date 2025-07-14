@@ -6,7 +6,7 @@ services:
     volumes:
       - ./frontend:/usr/share/nginx/html
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
-      - ./uploads/profiles:/usr/share/nginx/html/static/profils
+      - ./uploads/profiles:/usr/share/nginx/html/static/profiles
       - ./uploads/images:/usr/share/nginx/html/static/images
     depends_on:
       - api_gateway
