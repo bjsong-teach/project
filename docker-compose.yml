@@ -6,6 +6,8 @@ services:
     volumes:
       - ./frontend:/usr/share/nginx/html
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./uploads/profiles:/usr/share/nginx/html/static/profils
+      - ./uploads/images:/usr/share/nginx/html/static/images
     depends_on:
       - api_gateway
     networks:
@@ -29,6 +31,7 @@ services:
     build: ./services/user_service
     volumes:
       - ./services/user_service/app:/app
+      - ./uploads/profiles:/app/static/profiles
     ports:
       - "8001:8001"
     environment:

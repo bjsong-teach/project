@@ -1,6 +1,6 @@
 import os
 from typing import Annotated, Optional
-from fastapi import FastAPI, status, Response, Depends, HTTPException, Cookie
+from fastapi import FastAPI, status, Response, Depends, HTTPException, Cookie, UploadFile, File, Header
 from fastapi.staticfiles import StaticFiles
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -119,5 +119,31 @@ async def logout(
         await delete_session(redis, session_id)
     response.delete_cookie("session_id", path="/")
     return {"message": "Logout 성공"}
+
+@app.get("/api/users/{user_id}", response_model=UserPublic)
+async def get_user_by_id(
+    user_id: int,
+    session: Annotated[AsyncSession, Depends(get_session)]
+):
+    user = await session.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    
+    return create_user_public(user)
+
+@app.post("/api/users/me/upload-image", response_model=UserPublic)
+async def upload_my_profile_image(
+    session: Annotated[AsyncSession, Depends(get_session)],
+    user_id : Annotated[int, Header(alias="X-User-ID")],
+    file: UploadFile
+):
+    db_user = await session.get(User, user_id)
+    if not db_user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="사용자가 없습니다.")
+    
+    file_extension = os.path.splitext(file.filename)[1]
+    unique_filenam = f"{uuid.uuid4(){file_extension}}"
+    file_path = os.path.join(PROFILE_IMAGE_DIR, unique_filenam)
+    
 
 

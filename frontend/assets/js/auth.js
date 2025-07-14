@@ -1,6 +1,5 @@
 const API_URL = '/api';
 
-// getCookie 함수는 더 이상 필요 없으므로 삭제합니다.
 
 /**
  * 현재 로그인된 사용자 정보를 서버에 요청하는 함수
@@ -13,7 +12,6 @@ async function getCurrentUser() {
             method: 'GET',
             credentials: 'include' // 이 옵션 덕분에 브라우저는 HttpOnly 쿠키를 서버로 보냅니다.
         });
-
         // 서버가 200 OK 응답을 주면, 유효한 세션이 있다는 의미입니다.
         if (response.ok) {
             return await response.json(); // 사용자 정보를 반환합니다.

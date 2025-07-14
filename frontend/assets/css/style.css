@@ -343,4 +343,32 @@ body {
     color: #009879;
 }
 
-/* -------------------- 추가된 코드 끝 -------------------- */
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1.5rem;
+}
+.profile-image {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+.profile-info h1 {
+    margin: 0;
+    font-size: 2rem;
+}
+.profile-info p {
+    margin: 0.5rem 0 0 0;
+    color: #6c757d;
+}
+.post-list .list-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #eee;
+}
+.post-list .list-item:last-child {
+    border-bottom: none;
+}
