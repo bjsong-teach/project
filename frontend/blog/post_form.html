@@ -124,20 +124,21 @@
                 }
                 const savedPost = await textResponse.json();
                 const newPostId = savedPost.id;
-
+                
                 const imageFiles = imageInput.files;
                 if (imageFiles.length > 0) {
                     const formData = new FormData();
                     for (const file of imageFiles) {
                         formData.append("files", file);
                     }
-                    
+                      
                     const imageUploadUrl = `/api/${postType}/${resourceName}/${newPostId}/upload-images`;
                     const imageResponse = await fetch(imageUploadUrl, {
                         method: 'POST',
                         body: formData,
                         credentials: 'include'
                     });
+                    console.log(formData); 
                     if (!imageResponse.ok) throw new Error('이미지 업로드에 실패했습니다.');
                 }
                 
