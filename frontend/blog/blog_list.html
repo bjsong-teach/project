@@ -86,7 +86,7 @@
         articles.forEach(article => {
             const imageUrl = article.image_url || 'https://www.w3schools.com/w3images/woods.jpg';
             const gridItem = `
-                <a href="/blog_detail.html?id=${article.id}" class="grid-item">
+                <a href="/blog/blog_detail.html?id=${article.id}" class="grid-item">
                     <img src="${imageUrl}" alt="${article.title}">
                     <div class="grid-item-overlay">
                         <span>${article.title}</span>
