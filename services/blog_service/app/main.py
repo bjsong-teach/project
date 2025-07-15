@@ -21,6 +21,14 @@ IMAGE_DIR = f"{STATIC_DIR}/images"
 os.makedirs(IMAGE_DIR, exist_ok=True)
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
+class PaginatedResponse(SQLModel):
+    total: int
+    page: int
+    size: int
+    pages: int
+    items: List[dict] = []
+
+
 @app.on_event("startup")
 async def on_startup():
     await init_db()
@@ -67,3 +75,30 @@ async def upload_article_images(
     
     await session.commit()
     return saved_filenames
+
+@app.get("/api/blog/articles/{article_id}")
+async def get_article(article_id: int, session: Annotated[AsyncSession, Depends(get_session)]):
+    """특정 블로그 게시글의 상세 정보를 반환합니다."""
+    # 1. 먼저 게시글 정보만 가져옵니다.
+    article = await session.get(BlogArticle, article_id)
+    if not article:
+        raise HTTPException(status_code=404, detail="Article not found")
+    
+    author_info = {}
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(f"{USER_SERVICE_URL}/api/users/{article.owner_id}")
+            if resp.status_code == 200:
+                author_info = resp.json()
+    except Exception:
+        author_info = {"username": "Unknown"}
+
+    # 2. 별도의 쿼리를 실행하여 이 게시글에 속한 이미지 파일명들을 가져옵니다.
+    image_query = select(ArticleImage.image_filename).where(ArticleImage.article_id == article_id)
+    image_results = await session.exec(image_query)
+    image_filenames = image_results.all()
+    
+    # 3. 가져온 파일명들로 전체 이미지 URL 목록을 생성합니다.
+    image_urls = [f"/static/images/{filename}" for filename in image_filenames]
+    
+    return {"article": article, "author": author_info, "image_urls": image_urls}
