@@ -1,10 +1,14 @@
 import os
 import httpx
 from fastapi import FastAPI, Request, Response, HTTPException
+from auth_middleware import AuthMiddleware
 
 app = FastAPI(title="API Gateway")
 
 USER_SERVICE_URL = os.getenv("USER_SERVICE_URL")
+BLOG_SERVICE_URL = os.getenv("BLOG_SERVICE_URL")
+
+app.add_middleware(AuthMiddleware)
 
 @app.on_event("startup")
 async def startup_event():
@@ -31,7 +35,8 @@ async def reverse_proxy(request : Request):
             method=request.method,
             url=url,
             headers=request.headers,
-            content=await request.body()
+            content=await request.body(),
+            cookies=request.cookies
         )
         return Response(
             content=rp_resp.content,

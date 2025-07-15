@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>기술 블로그</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway">
+    <link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+<div class="w3-content">
+    <nav class="navbar">
+        <div class="container">
+            <a href="/index.html" class="nav-brand">🚀 MSA Project</a>
+            <div class="nav-links">
+                <a href="/board_list.html" class="nav-link">게시판</a>
+                <a href="/blog_list.html" class="nav-link">블로그</a>
+            </div>
+            <div id="auth-links" class="nav-auth"></div>
+        </div>
+    </nav>
+
+    <header class="w3-container w3-center w3-padding-32">
+        <h1><b>MY BLOG</b></h1>
+        <p>Welcome to the blog of <span class="w3-tag">unknown</span></p>
+    </header>
+
+    <main class="container">
+        <div id="blog-grid-container" class="grid-container">
+            </div>
+        <nav>
+            <ul id="pagination-ul" class="pagination"></ul>
+        </nav>
+    </main>
+</div>
+
+<script src="/assets/js/auth.js"></script>
+<script>
+    const gridContainer = document.getElementById('blog-grid-container');
+    const paginationUl = document.getElementById('pagination-ul');
+    const POSTS_PER_PAGE = 9; // 3x3 그리드를 위해 9개씩 로드
+
+    async function fetchAndRenderBlog(page = 1) {
+        gridContainer.innerHTML = `<p>로딩 중...</p>`;
+        paginationUl.innerHTML = '';
+        try {
+            const response = await fetch(`/api/blog/articles?page=${page}&size=${POSTS_PER_PAGE}`);
+            if (!response.ok) throw new Error('데이터 로딩 실패');
+            
+            const data = await response.json();
+            renderArticles(data.items);
+            renderPagination(data.page, data.pages);
+        } catch (error) {
+            gridContainer.innerHTML = `<p style="color:red;">${error.message}</p>`;
+        }
+    }
+
+    function renderArticles(articles) {
+        gridContainer.innerHTML = '';
+        if (!articles || articles.length === 0) {
+            gridContainer.innerHTML = `<p>게시물이 없습니다.</p>`;
+            return;
+        }
+
+        articles.forEach(article => {
+            const imageUrl = article.image_url || 'https://www.w3schools.com/w3images/woods.jpg';
+            const gridItem = `
+                <a href="/blog_detail.html?id=${article.id}" class="grid-item">
+                    <img src="${imageUrl}" alt="${article.title}">
+                    <div class="grid-item-overlay">
+                        <span>${article.title}</span>
+                    </div>
+                </a>
+            `;
+            gridContainer.insertAdjacentHTML('beforeend', gridItem);
+        });
+    }
+
+
+    function renderPagination(currentPage, totalPages) {
+        paginationUl.innerHTML = '';
+        if (totalPages <= 1) return;
+
+        for (let i = 1; i <= totalPages; i++) {
+            const li = document.createElement('li');
+            if (i === currentPage) li.classList.add('active');
+            
+            const a = document.createElement('a');
+            a.href = '#';
+            a.innerText = i;
+            a.addEventListener('click', (e) => {
+                e.preventDefault();
+                fetchAndRenderBlog(i);
+            });
+
+            li.appendChild(a);
+            paginationUl.appendChild(li);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        renderNavbar();
+        fetchAndRenderBlog(1);
+    });
+</script>
+</body>
+</html>

@@ -87,11 +87,11 @@ body {
     background-color: #ffffff;
     border-bottom: 1px solid #e9ecef;
     padding: 0.5rem 1rem;
-    position: fixed;
     top: 0;
     width: 100%;
     z-index: 1000;
     max-width: 1350px;
+    margin: 0 auto;
 }
 .navbar .container {
     display: flex;
@@ -371,4 +371,68 @@ body {
 }
 .post-list .list-item:last-child {
     border-bottom: none;
+}
+
+/* (파일의 맨 아래에 추가) */
+
+/* --- 인스타그램 스타일 그리드 --- */
+.grid-container {
+    display: grid;
+    /* 3개의 열을 만들고, 각 열의 너비는 동일하게(1fr) 설정 */
+    grid-template-columns: repeat(3, 1fr);
+    gap: 28px; /* 이미지 사이의 간격 */
+}
+
+.grid-item {
+    position: relative; /* 오버레이를 위한 기준점 */
+    aspect-ratio: 1 / 1; /* 1:1 정사각형 비율 유지 */
+    cursor: pointer;
+    overflow: hidden; /* 둥근 모서리 밖으로 이미지가 나가지 않도록 */
+    border-radius: 4px;
+}
+
+.grid-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* 이미지가 잘리더라도 비율을 유지하며 꽉 채움 */
+    transition: transform 0.3s ease;
+}
+
+/* 마우스를 올리면 정보가 나타나는 오버레이 */
+.grid-item-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    opacity: 0; /* 평소에는 투명하게 */
+    transition: opacity 0.3s ease;
+    padding: 1rem;
+    box-sizing: border-box;
+}
+
+/* 마우스를 올렸을 때의 효과 */
+.grid-item:hover img {
+    transform: scale(1.1); /* 이미지가 약간 확대됨 */
+}
+.grid-item:hover .grid-item-overlay {
+    opacity: 1; /* 오버레이가 나타남 */
+}
+
+/* 화면이 작아질 때 반응형으로 열 개수 조절 */
+@media (max-width: 992px) {
+    .grid-container {
+        grid-template-columns: repeat(2, 1fr); /* 2열 */
+    }
+}
+@media (max-width: 600px) {
+    .grid-container {
+        grid-template-columns: repeat(1, 1fr); /* 1열 */
+    }
 }

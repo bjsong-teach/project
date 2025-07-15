@@ -19,12 +19,10 @@ os.makedirs(PROFILE_IMAGE_DIR, exist_ok =True)
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 def create_user_public(user: User) -> UserPublic:
-    print(f"create_user_public:{user}")
+    
     image_url = f"/static/profiles/{user.profile_image_filename}" if user.profile_image_filename else "https://www.w3schools.com/w3images/avatar_g.jpg"
     user_dict = user.model_dump()
-    print(f"user_dict : {user_dict}")
     user_dict["profile_image_url"] = image_url
-    print(f"{UserPublic.model_validate(user_dict)}")
     return UserPublic.model_validate(user_dict)
     '''
     if user.profile_image_filename:
@@ -87,14 +85,13 @@ async def login(
     session: Annotated[AsyncSession, Depends(get_session)],
     redis: Annotated[Redis, Depends(get_redis)]
 ):
-    print(f"user_date : {user_data}")
-    print("------------------------------------------------------")
+    
     statement = select(User).where(User.email==user_data.email)
-    print(f"statement :{statement}")
+    
     user_result = await session.exec(statement)
-    print(f"user_result :{user_result}")
+    
     user = user_result.one_or_none()
-    print(f"user :{user}")
+    
     if not user or not verify_password(user_data.password, user.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="이메일 또는 비밀번호가 틀립니다.")
     if user.id is not None:
@@ -112,12 +109,12 @@ async def get_current_user(
     redis: Annotated[Redis, Depends(get_redis)],
     session_id: Annotated[Optional[str], Cookie()] = None
 ):
-    print(f"session:{session_id}")
+    
     if not session_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
     
     user_id = await get_user_id_from_session(redis, session_id)
-    print(f"user_id:{user_id}")
+    
     if not user_id:
         response.delete_cookie("session_id", path="/")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found redis session")
@@ -127,7 +124,7 @@ async def get_current_user(
     if not user:
         response.delete_cookie("session_id", path="/")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
-    print(user)
+    
     return create_user_public(user)
 
 @app.post("/api/auth/logout")
@@ -179,8 +176,6 @@ async def upload_my_profile_image(
     user_id : Annotated[int, Depends(get_current_user_id)],
     file: UploadFile
 ):
-    print(user_id)
-    print(file)
     db_user = await session.get(User, user_id)
     if not db_user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="사용자가 없습니다.")
