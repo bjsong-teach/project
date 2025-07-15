@@ -112,11 +112,9 @@ async def list_articles(
 ):
     """블로그 게시글 목록을 페이지네이션하여 반환합니다."""
     offset = (page - 1) * size
-    
     # 기본 쿼리
     count_query = select(func.count(BlogArticle.id))
     articles_query = select(BlogArticle).order_by(BlogArticle.id.desc())
-
     # owner_id가 주어지면 해당 사용자의 글만 필터링합니다.
     if owner_id:
         count_query = count_query.where(BlogArticle.owner_id == owner_id)
@@ -124,11 +122,9 @@ async def list_articles(
 
     total_result = await session.exec(count_query)
     total = total_result.one()
-
     paginated_query = articles_query.offset(offset).limit(size)
     articles_result = await session.exec(paginated_query)
     articles = articles_result.all()
-
     # --- 작성자 및 썸네일 정보 가져오기 ---
     author_ids = {p.owner_id for p in articles}
     authors = {}
