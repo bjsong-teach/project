@@ -114,15 +114,21 @@ async def list_articles(
     offset = (page - 1) * size
     # 기본 쿼리
     count_query = select(func.count(BlogArticle.id))
+    #count_query = "select count(id) from BlogArticle"
     articles_query = select(BlogArticle).order_by(BlogArticle.id.desc())
+    #count_query = "select * from BlogArticle oder by id desc"
+    
     # owner_id가 주어지면 해당 사용자의 글만 필터링합니다.
     if owner_id:
         count_query = count_query.where(BlogArticle.owner_id == owner_id)
+        #count_query = "select count(id) from BlogArticle where owner_id = owner_id"
         articles_query = articles_query.where(BlogArticle.owner_id == owner_id)
+        #articles_query = "select * from BlogArticle where owner_id = owner_id  oder by id desc"
 
     total_result = await session.exec(count_query)
     total = total_result.one()
     paginated_query = articles_query.offset(offset).limit(size)
+    #paginated_query = "select * from BlogArticle where owner_id = owner_id  oder by id desc limit 0,9"
     articles_result = await session.exec(paginated_query)
     articles = articles_result.all()
     # --- 작성자 및 썸네일 정보 가져오기 ---
@@ -144,6 +150,7 @@ async def list_articles(
     thumbnails = {}
     if article_ids:
         image_query = select(ArticleImage).where(ArticleImage.article_id.in_(article_ids))
+        #image_query = "select * from ArticleImage where article_id in (1,2,3)"
         image_results = await session.exec(image_query)
         for img in image_results.all():
             if img.article_id not in thumbnails:
