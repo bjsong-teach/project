@@ -96,7 +96,7 @@
         let actionButtons = '';
         if (loggedInUser && loggedInUser.id === article.owner_id) {
             actionButtons = `
-                <div style="margin-top: 1rem;">
+                <div>
                     <a href="/blog/post_form.html?type=blog&id=${article.id}" class="btn btn-primary">수정</a>
                     <button id="delete-btn" class="btn btn-danger">삭제</button>
                 </div>`;
@@ -116,7 +116,7 @@
             </div>
             ${galleryImages ? `<div class="w3-container image-gallery">${galleryImages}</div>` : ''}
             <div class="w3-container w3-padding-large">
-                <a href="/blog_list.html" class="w3-button w3-border"><b>« 목록으로</b></a>
+                <a href="/blog/blog_list.html" class="w3-button w3-border"><b>« 목록으로</b></a>
                 <div style="float: right;">${actionButtons}</div>
             </div>`;
 

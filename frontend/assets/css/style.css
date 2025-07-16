@@ -50,7 +50,7 @@ body {
     opacity: 0.60;
 }
 .w3-margin {
-    margin: 16px 0;
+    margin: 28px 0;
 }
 .w3-padding {
     padding: 8px 16px !important;
@@ -86,17 +86,23 @@ body {
 .navbar {
     background-color: #ffffff;
     border-bottom: 1px solid #e9ecef;
-    padding: 0.5rem 1rem;
+    padding: 0.5rem 1rem; /* 상하 패딩 */
+    position: fixed;      /* 화면 상단에 고정 */
     top: 0;
-    width: 100%;
+    left: 50%;            /* 화면의 중앙으로 이동 */
+    transform: translateX(-50%); /* 정확한 중앙 정렬 */
+    width: 100%;          /* 너비를 100%로 하되 */
+    max-width: 1400px;    /* 최대 너비를 제한하여 중앙에 고정된 효과 */
     z-index: 1000;
-    max-width: 1350px;
-    margin: 0 auto;
+    box-sizing: border-box;
 }
+
+/* 네비게이션 바 내부의 콘텐츠는 이제 부모 너비를 따름 */
 .navbar .container {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    width: 100%;
 }
 .nav-brand { font-weight: bold; font-size: 1.25rem; color: #212529; text-decoration: none; }
 .nav-links a, .nav-auth a, .nav-auth span, .nav-auth button {
