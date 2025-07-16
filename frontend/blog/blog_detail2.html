@@ -10,34 +10,24 @@
         .slider-container {
             position: relative;
             width: 100%;
-            margin: auto;
+            overflow: hidden; /* 자식 요소가 밖으로 나가지 않도록 */
         }
         .slider-wrapper {
             display: flex;
-            overflow-x: auto; /* 가로 스크롤 가능하게 */
-            scroll-snap-type: x mandatory; /* 스크롤 시 부드럽게 걸리는 효과 */
-            cursor: grab; /* 잡을 수 있다는 표시 */
-            -ms-overflow-style: none;  /* IE and Edge 스크롤바 숨기기 */
-            scrollbar-width: none;  /* Firefox 스크롤바 숨기기 */
-            scroll-behavior: smooth; /* JS로 스크롤 시 부드럽게 이동 */
-        }
-        .slider-wrapper::-webkit-scrollbar {
-            display: none; /* 크롬, 사파리 등에서 스크롤바 숨기기 */
+            /* transition은 JS에서 제어하므로 제거 */
+            cursor: grab;
         }
         .slider-wrapper.active {
             cursor: grabbing;
-            cursor: -webkit-grabbing;
-            scroll-snap-type: none; /* 드래그 중에는 스냅 효과를 잠시 해제 */
         }
         .slide {
-            flex: 0 0 100%; /* 각 슬라이드가 컨테이너 너비를 꽉 채움 */
-            scroll-snap-align: center; /* 가운데에 스냅 */
+            min-width: 100%;
+            box-sizing: border-box;
         }
         .slide img {
             width: 100%;
             display: block;
-            user-drag: none; /* 이미지 드래그 방지 */
-            -webkit-user-drag: none;
+            pointer-events: none; /* 드래그 중 이미지 선택 방지 */
         }
         /* 점(Dot) 내비게이션 스타일 */
         .dots-container {
@@ -62,6 +52,7 @@
 </head>
 <body>
 <div class="w3-content">
+    <!-- 네비게이션 바 -->
     <nav class="navbar">
         <div class="container">
             <a href="/index.html" class="nav-brand">🚀 MSA Project</a>
@@ -73,6 +64,7 @@
         </div>
     </nav>
 
+    <!-- 메인 그리드 -->
     <div class="w3-row">
         <div class="w3-col l8 s12">
             <div id="article-container" class="w3-card-4 w3-margin w3-white">
@@ -94,7 +86,7 @@
 
     function renderArticle(data, loggedInUser) {
         const { article, author, image_urls } = data;
-        const formattedDate = new Date(article.create_at).toLocaleDateString('ko-KR', dateOptions);
+        const formattedDate = new Date(article.created_at).toLocaleDateString('ko-KR', dateOptions);
         
         let actionButtons = '';
         if (loggedInUser && loggedInUser.id === article.owner_id) {
@@ -145,50 +137,74 @@
 
     function initSlider() {
         const slider = document.querySelector('.slider-wrapper');
+        const slides = document.querySelectorAll('.slide');
         const dots = document.querySelectorAll('.dot');
-        if (!slider || dots.length === 0) return;
+        if (!slider || slides.length <= 1) return;
 
-        // 마우스 드래그 스크롤 기능
-        let isDown = false, startX, scrollLeft;
+        let currentIndex = 0;
+        let isDown = false;
+        let startX;
+        let walk;
+
+        function updateSlider(withTransition = true) {
+            slider.style.transition = withTransition ? 'transform 0.4s ease-in-out' : 'none';
+            slider.style.transform = `translateX(${-currentIndex * 100}%)`;
+            dots.forEach((dot, index) => dot.classList.toggle('active', index === currentIndex));
+        }
+
         slider.addEventListener('mousedown', (e) => {
             isDown = true;
             slider.classList.add('active');
             startX = e.pageX - slider.offsetLeft;
-            scrollLeft = slider.scrollLeft;
+            walk = 0;
+            slider.style.transition = 'none';
         });
-        slider.addEventListener('mouseleave', () => { isDown = false; slider.classList.remove('active'); });
-        slider.addEventListener('mouseup', () => { isDown = false; slider.classList.remove('active'); });
+
+        slider.addEventListener('mouseleave', () => {
+            if (!isDown) return;
+            isDown = false;
+            slider.classList.remove('active');
+            updateSlider(); // 원래 위치로 스냅
+        });
+
+        slider.addEventListener('mouseup', () => {
+            if (!isDown) return;
+            isDown = false;
+            slider.classList.remove('active');
+            
+            // 일정 거리(50px) 이상 드래그했을 때만 슬라이드 넘김
+            if (walk < -50 && currentIndex < slides.length - 1) {
+                currentIndex++;
+            } else if (walk > 50 && currentIndex > 0) {
+                currentIndex--;
+            }
+            updateSlider(); // 최종 위치로 스냅
+        });
+
         slider.addEventListener('mousemove', (e) => {
             if (!isDown) return;
             e.preventDefault();
             const x = e.pageX - slider.offsetLeft;
-            const walk = (x - startX) * 2; // 감도 조절
-            slider.scrollLeft = scrollLeft - walk;
+            walk = x - startX;
+            slider.style.transform = `translateX(calc(${-currentIndex * 100}% + ${walk}px))`;
         });
 
-        // 점(dot) 클릭 시 이동 기능
-        dots.forEach(dot => {
-            dot.addEventListener('click', (e) => {
-                const slideIndex = parseInt(e.target.dataset.slideIndex);
-                slider.scrollTo({ left: slideIndex * slider.offsetWidth });
+        dots.forEach((dot, index) => {
+            dot.addEventListener('click', () => {
+                currentIndex = index;
+                updateSlider();
             });
         });
-
-        // 스크롤 시 현재 슬라이드에 해당하는 점(dot) 활성화
-        slider.addEventListener('scroll', () => {
-            const currentSlide = Math.round(slider.scrollLeft / slider.offsetWidth);
-            dots.forEach((dot, index) => dot.classList.toggle('active', index === currentSlide));
-        });
         
-        // 최초 로드 시 첫번째 점 활성화
         if(dots[0]) dots[0].classList.add('active');
     }
 
     function renderAboutMe(user) {
         if (!user) { aboutMeCard.style.display = 'none'; return; }
+        const imageUrl = user.profile_image_url || 'https://www.w3schools.com/w3images/avatar_g.jpg';
         aboutMeCard.innerHTML = `
             <div class="w3-card-4 w3-margin w3-white">
-                <img src="${user.profile_image_url}" alt="My Photo" style="width:100%">
+                <img src="${imageUrl}?t=${new Date().getTime()}" alt="My Photo" style="width:100%">
                 <div class="w3-container w3-padding">
                     <h4><b>${user.username}</b></h4>
                     <p>${user.bio || '자기소개를 입력해주세요.'}</p>

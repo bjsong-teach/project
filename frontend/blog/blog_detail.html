@@ -4,15 +4,40 @@
     <meta charset="UTF-8">
     <title>블로그 상세</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway">
-    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/style.css?v=1">
     <style>
-        /* 이 페이지에만 적용되는 추가 스타일 */
-        .post-content { white-space: pre-wrap; line-height: 1.8; }
-        .image-gallery { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 1rem; }
-        .gallery-img { width: 120px; height: 120px; object-fit: cover; border-radius: 4px; }
-        .w3-ul { list-style-type: none; padding: 0; margin: 0; }
-        .w3-ul li { padding: 8px 16px; border-bottom: 1px solid #ddd; }
-        .w3-ul li:last-child { border-bottom: none; }
+        /* ▼▼▼ 이미지 팝업 모달 스타일 추가 ▼▼▼ */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: none; /* 평소에는 숨김 */
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        .modal-content {
+            position: relative;
+            max-width: 90%;
+            max-height: 90%;
+        }
+        .modal-content img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .close-button {
+            position: absolute;
+            top: 15px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -41,7 +66,13 @@
         </aside>
     </div>
 </div>
-
+<!-- ▼▼▼ 이미지 팝업 모달 HTML 추가 ▼▼▼ -->
+<div id="image-modal" class="modal-overlay">
+    <span class="close-button" onclick="closeModal()">&times;</span>
+    <div class="modal-content">
+        <img id="modal-image" src="">
+    </div>
+</div>
 <script src="/assets/js/auth.js"></script>
 <script>
     // --- 페이지 요소 가져오기 ---
@@ -50,6 +81,8 @@
     const aboutMeCard = document.getElementById('about-me-card');
     const popularPostsCard = document.getElementById('popular-posts-card');
     const tagsCard = document.getElementById('tags-card');
+    const imageModal = document.getElementById('image-modal');
+    const modalImage = document.getElementById('modal-image');
     
     // --- URL에서 게시물 ID 가져오기 ---
     const articleId = new URLSearchParams(window.location.search).get('id');
@@ -69,8 +102,8 @@
                 </div>`;
         }
 
-        const mainImage = image_urls.length > 0 ? `<img src="${image_urls[0]}" alt="대표 이미지" style="width:100%">` : '';
-        const galleryImages = image_urls.slice(1).map(url => `<img src="${url}" alt="갤러리 이미지" class="gallery-img">`).join('');
+        const mainImage = image_urls.length > 0 ? `<img src="${image_urls[0]}?t=${new Date().getTime()}" alt="대표 이미지" style="width:100%" onclick="openModal('${image_urls[0]}')">` : '';
+        const galleryImages = image_urls.slice(1).map(url => `<img src="${url}?t=${new Date().getTime()}" alt="갤러리 이미지" class="gallery-img" onclick="openModal('${url}')">`).join('');
 
         articleContainer.innerHTML = `
             ${mainImage}
@@ -83,10 +116,9 @@
             </div>
             ${galleryImages ? `<div class="w3-container image-gallery">${galleryImages}</div>` : ''}
             <div class="w3-container w3-padding-large">
-                <a href="/blog/blog_list.html" class="w3-button w3-border"><b>« 목록으로</b></a>
-                ${actionButtons}
-            </div>
-        `;
+                <a href="/blog_list.html" class="w3-button w3-border"><b>« 목록으로</b></a>
+                <div style="float: right;">${actionButtons}</div>
+            </div>`;
 
         if (document.getElementById('delete-btn')) {
             document.getElementById('delete-btn').addEventListener('click', async () => {
@@ -102,7 +134,21 @@
             });
         }
     }
+    // --- 모달 관련 함수 추가 ---
+    function openModal(imageUrl) {
+        modalImage.src = imageUrl;
+        imageModal.style.display = 'flex';
+    }
 
+    function closeModal() {
+        imageModal.style.display = 'none';
+    }
+    // 모달 바깥 영역 클릭 시 닫기
+    window.onclick = function(event) {
+        if (event.target == imageModal) {
+            closeModal();
+        }
+    }
     function renderAboutMe(user) {
         if (!user) { aboutMeCard.style.display = 'none'; return; }
         aboutMeCard.innerHTML = `

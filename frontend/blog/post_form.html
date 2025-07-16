@@ -144,7 +144,8 @@
                 
                 alert('성공적으로 저장되었습니다.');
                 const detailPage = (postType === 'board') ? 'board_detail.html' : '/blog/blog_detail.html';
-                window.location.href = `/${detailPage}?id=${newPostId}`;
+                console.log(detailPage);
+                window.location.href = `${detailPage}?id=${newPostId}`;
 
             } catch (error) {
                 errorEl.innerText = error.message;
