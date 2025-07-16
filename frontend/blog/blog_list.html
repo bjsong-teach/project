@@ -101,7 +101,7 @@
     window.addEventListener('scroll', () => {
         // 사용자가 페이지 맨 아래 근처로 스크롤했는지 확인
         // (전체 높이 - 현재 스크롤 위치)가 브라우저 창 높이보다 작으면
-        if (document.documentElement.scrollHeight - window.scrollY - window.innerHeight < 200) {
+        if (document.documentElement.scrollHeight - window.scrollY - window.innerHeight < 500) {
             fetchAndRenderBlog(currentPage);
         }
     });

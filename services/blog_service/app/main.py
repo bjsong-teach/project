@@ -46,36 +46,6 @@ async def create_article(
     await session.refresh(new_article)
     return new_article
 
-@app.post("/api/blog/articles/{article_id}/upload-images", response_model=List[str])
-async def upload_article_images(
-    article_id: int,
-    files: List[UploadFile],
-    session: Annotated[AsyncSession, Depends(get_session)],
-    x_user_id: Annotated[int, Header(alias="X-User-Id")],
-):
-    """게시글에 여러 이미지를 업로드하고 파일명을 DB에 저장합니다."""
-    db_article = await session.get(BlogArticle, article_id)
-    if not db_article:
-        raise HTTPException(status_code=404, detail="Article not found")
-    if db_article.owner_id != x_user_id:
-        raise HTTPException(status_code=403, detail="Not authorized")
-
-    saved_filenames = []
-    for file in files:
-        file_extension = os.path.splitext(file.filename)[1]
-        unique_filename = f"{uuid.uuid4()}{file_extension}"
-        file_path = os.path.join(IMAGE_DIR, unique_filename)
-
-        with open(file_path, "wb") as buffer:
-            buffer.write(await file.read())
-
-        new_image = ArticleImage(image_filename=unique_filename, article_id=article_id)
-        session.add(new_image)
-        saved_filenames.append(unique_filename)
-    
-    await session.commit()
-    return saved_filenames
-
 @app.get("/api/blog/articles/{article_id}")
 async def get_article(article_id: int, session: Annotated[AsyncSession, Depends(get_session)]):
     """특정 블로그 게시글의 상세 정보를 반환합니다."""
@@ -168,3 +138,115 @@ async def list_articles(
         total=total, page=page, size=size,
         pages=math.ceil(total / size), items=items_with_details
     )
+
+@app.get("/api/blog/tags", response_model=List[str])
+async def get_all_tags(session: Annotated[AsyncSession, Depends(get_session)]):
+    """모든 게시물의 태그를 수집하여 중복 없이 반환합니다."""
+    query = select(BlogArticle.tags).where(BlogArticle.tags != None)
+    #query = "slelect tags from BlogArticle where tags <> '' or tags is null"
+    results = await session.exec(query)
+    all_tags: Set[str] = set()
+    
+    for tags_str in results.all():
+        tags = [tag.strip() for tag in tags_str.split(',') if tag.strip()]
+        '''
+        tags_string = tags_str[0]
+        split_tags = tags_string.split(',')
+        for single_tag in split_tags:
+            clean_tag = single_tag.strip()
+            if clean_tag:
+                all_tags.add(clean_tag)
+        '''
+        all_tags.update(tags)
+    return sorted(list(all_tags))
+
+@app.get("/api/blog/popular-articles", response_model=List[BlogArticle])
+async def get_popular_articles(session: Annotated[AsyncSession, Depends(get_session)]):
+    query = select(BlogArticle).order_by(BlogArticle.id.desc()).limit(4)
+    #query = SELECT * FROM BlogArticle ORDER BY id DESC LIMIT 4
+    result = await session.exec(query)
+    popular_articles = result.all()
+    return popular_articles
+
+@app.patch("/api/blog/articles/{article_id}", response_model=BlogArticle)
+async def update_article(
+    article_id: int,
+    article_data: ArticleUpdate,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    x_user_id: Annotated[int, Header(alias="X-User-Id")],
+):
+    db_article = await session.get(BlogArticle, article_id)
+    if not db_article:
+        raise HTTPException(status_code=404, detail="Article not found")
+    if db_article.owner_id != x_user_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    update_data = article_data.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(db_article, key, value)
+    
+    #session.add(db_article)
+    await session.commit()
+    await session.refresh(db_article)
+    return db_article
+@app.delete("/api/blog/articles/{article_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_article(
+    article_id: int,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    x_user_id: Annotated[int, Header(alias="X-User-Id")],
+):
+    db_article = await session.get(BlogArticle, article_id)
+    if not db_article:
+        raise HTTPException(status_code=404, detail="Article not found")
+    if db_article.owner_id != x_user_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    image_query = select(ArticleImage).where(ArticleImage.article_id == article_id)
+    images_to_delete = (await session.exec(image_query)).all()
+    for image in images_to_delete:
+        file_path = os.path.join(IMAGE_DIR, image.image_filename)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        await session.delete(image)
+
+    await session.delete(db_article)
+    await session.commit()
+    return
+
+@app.post("/api/blog/articles/{article_id}/upload-images", response_model=List[str])
+async def upload_article_images(
+    article_id: int,
+    files: List[UploadFile],
+    session: Annotated[AsyncSession, Depends(get_session)],
+    x_user_id: Annotated[int, Header(alias="X-User-Id")],
+):
+    """게시글에 여러 이미지를 업로드하고 파일명을 DB에 저장합니다."""
+    db_article = await session.get(BlogArticle, article_id)
+    if not db_article:
+        raise HTTPException(status_code=404, detail="Article not found")
+    if db_article.owner_id != x_user_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    #수정시 이미지가 있으면 삭제 
+    existing_images_query = select(ArticleImage).where(ArticleImage.article_id == article_id)
+    images_to_delete = (await session.exec(existing_images_query)).all()
+    for image in images_to_delete:
+        file_path = os.path.join(IMAGE_DIR, image.image_filename)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        await session.delete(image)
+    #-----------------------------    
+    saved_filenames = []
+    for file in files:
+        file_extension = os.path.splitext(file.filename)[1]
+        unique_filename = f"{uuid.uuid4()}{file_extension}"
+        file_path = os.path.join(IMAGE_DIR, unique_filename)
+
+        with open(file_path, "wb") as buffer:
+            buffer.write(await file.read())
+
+        new_image = ArticleImage(image_filename=unique_filename, article_id=article_id)
+        session.add(new_image)
+        saved_filenames.append(unique_filename)
+    
+    await session.commit()
+    return saved_filenames

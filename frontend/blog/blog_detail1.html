@@ -108,7 +108,7 @@
 
     function renderArticle(data, loggedInUser) {
         const { article, author, image_urls } = data;
-        const formattedDate = new Date(article.created_at).toLocaleDateString('ko-KR', dateOptions);
+        const formattedDate = new Date(article.create_at).toLocaleDateString('ko-KR', dateOptions);
         
         let actionButtons = '';
         if (loggedInUser && loggedInUser.id === article.owner_id) {
