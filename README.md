@@ -11,8 +11,10 @@ graph TD
     subgraph "Internal Service Layer"
         style BoardService fill:#e6f7ff,stroke:#007bff
         style BlogService fill:#d4edda,stroke:#155724
+        style UserService fill:#fff7e6,stroke:#ffc107
         BoardService["Board Service"]
         BlogService["Blog Service"]
+        UserService["👤 User Service"]
     end
 
     subgraph "Data Store Layer"
@@ -31,11 +33,15 @@ graph TD
 
     Gateway -- "Routing: /api/board/*" --> BoardService
     Gateway -- "Routing: /api/blog/*" --> BlogService
+    Gateway -- "Routing: /api/users/*" --> UserService
     
-    BoardService -- CRUD --> DB
-    BoardService -- "캐시/큐 처리" --> Redis
+    BoardService -- "작성자 정보 조회" --> UserService
+    BlogService -- "작성자 정보 조회" --> UserService
 
+    BoardService -- CRUD --> DB
     BlogService -- CRUD --> DB
+
+    BoardService -- "캐시/큐 처리" --> Redis
     BlogService -- "캐시/큐 처리" --> Redis
 
     SyncWorker -. "동기화 대상 확인" .-> Redis
