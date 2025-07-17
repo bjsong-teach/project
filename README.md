@@ -6,7 +6,7 @@ graph TD
 
     subgraph "API Gateway Layer"
         style Gateway fill:#f8f9fa,stroke:#6c757d
-        Gateway["🌐 API Gateway"]
+        Gateway["<b>🌐 API Gateway</b><br/>- Routing<br/>- <i>Authentication / Session Handling</i>"]
     end
 
     subgraph "Internal Service Layer"
@@ -15,21 +15,22 @@ graph TD
         style UserService fill:#fff7e6,stroke:#ffc107
         BoardService["<b>Board Service</b><br/>- REST API<br/>- <i>APScheduler for DB Sync</i>"]
         BlogService["<b>Blog Service</b><br/>- REST API<br/>- <i>APScheduler for DB Sync</i>"]
-        UserService["👤 User Service"]
+        UserService["<b>👤 User Service</b>"]
     end
 
     subgraph "Data Store Layer"
         style DB fill:#e6f3e6,stroke:#28a745
         style Redis fill:#fff0f1,stroke:#dc3545
-        DB["MySQL DB"]
-        Redis["⚡ Redis"]
+        DB["<b>MySQL DB</b><br/>- Posts, Users Data"]
+        Redis["<b>⚡ Redis</b><br/>- <i>Session Store</i><br/>- View Count Cache<br/>- Sync Queue"]
     end
 
-    Client -- "REST API Calls (HTTP)" --> Gateway
+    Client -- "REST API Calls (with Session Token)" --> Gateway
 
-    Gateway -- "Routing: /api/board/*" --> BoardService
-    Gateway -- "Routing: /api/blog/*" --> BlogService
-    Gateway -- "Routing: /api/users/*" --> UserService
+    Gateway -- "1. Session Check" --> Redis
+    Gateway -- "2. Routing" --> BoardService
+    Gateway -- "2. Routing" --> BlogService
+    Gateway -- "2. Routing" --> UserService
     
     BoardService -- "작성자 정보 조회" --> UserService
     BlogService -- "작성자 정보 조회" --> UserService
