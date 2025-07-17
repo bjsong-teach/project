@@ -13,19 +13,12 @@ import redis.asyncio as redis
 from database import init_db, get_session
 from redis_client import get_redis
 from models import Post, PostCreate, PostUpdate
+from schemas import PaginatedResponse
 
-app = FastAPI(title="Board Service")
+app = FastAPI(title="Board Service") 
 
 # 환경 변수에서 User Service의 주소를 가져옵니다.
 USER_SERVICE_URL = os.getenv("USER_SERVICE_URL")
-
-# 페이지네이션 응답을 위한 데이터 모델
-class PaginatedResponse(SQLModel):
-    total: int
-    page: int
-    size: int
-    pages: int
-    items: List[dict] = []
 
 @app.on_event("startup")
 async def on_startup():
@@ -113,7 +106,7 @@ async def get_post(
     
     # ▼▼▼ 동기화 작업 등록 로직 추가 ▼▼▼
     # 'view_sync_queue'라는 작업 큐에 post_id를 현재 시간 점수와 함께 추가합니다.
-    #await redis.zadd("view_sync_queue", {str(post_id): time.time()})
+    await redis.zadd("view_sync_queue", {str(post_id): time.time()})
     
     post = await session.get(Post, post_id)
     if not post:
@@ -166,5 +159,10 @@ async def delete_post(
         raise HTTPException(status_code=403, detail="Not authorized")
 
     await session.delete(db_post)
+    
+    view_count_key = f"views:post:{post_id}"
+    await redis.delete(view_count_key)
+    await redis.zrem("view_sync_queue", str(post_id))
+    
     await session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)

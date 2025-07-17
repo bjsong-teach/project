@@ -45,7 +45,7 @@ services:
       user_db:
         condition: service_healthy
       redis_db:
-        condition: service_started
+        condition: service_healthy
     networks:
       - webnet
   blog_service:
@@ -74,10 +74,27 @@ services:
       board_db:
         condition: service_healthy
       redis_db:
-        condition: service_started
+        condition: service_healthy
     networks:
       - webnet
 
+  board_worker:
+    build: ./services/board_service # board_service와 동일한 환경을 사용
+    volumes:
+      - ./services/board_service/app:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DATABASE_URL=mysql+asyncmy://${DB_USER}:${DB_PASSWORD}@board_db:3306/board_db
+      - REDIS_URL=${REDIS_URL}
+    # Uvicorn 대신 worker.py를 실행하도록 명령어 변경
+    command: ["python", "worker.py"]
+    depends_on:
+      board_db:
+        condition: service_healthy
+      redis_db:
+        condition: service_healthy
+    networks:
+      - webnet
   user_db:
     image: mysql:8.0
     ports:
@@ -137,6 +154,11 @@ services:
   
   redis_db:
     image: redis:alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - webnet
 

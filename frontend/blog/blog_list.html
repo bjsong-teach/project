@@ -23,13 +23,16 @@
         <h1><b>MY BLOG</b></h1>
         <p>Welcome to the blog of <span class="w3-tag">unknown</span></p>
     </header>
-
+    <div class="w3-container w3-padding-large">
+        <div id="button" style="text-align: right;"></div>
+    </div>
     <main class="container">
         <div id="blog-grid-container" class="grid-container">
             </div>
         <div id="loading-indicator" style="text-align: center; padding: 2rem; display: none;">
             <p>Loading more posts...</p>
         </div>
+        
     </main>
 </div>
 
@@ -37,12 +40,17 @@
 <script>
     const gridContainer = document.getElementById('blog-grid-container');
     const loadingIndicator = document.getElementById('loading-indicator');
+    const actionButton = document.getElementById('button');
     
     // --- 무한 스크롤을 위한 상태 변수 ---
     let currentPage = 1;
     let isLoading = false; // 중복 요청 방지를 위한 플래그
     let hasMore = true;    // 더 이상 불러올 데이터가 없는지 확인하는 플래그
     const POSTS_PER_PAGE = 9;
+    const loggedInUser = getCurrentUser();
+    if(loggedInUser){
+        actionButtons = `<a href="/blog/post_form.html?type=blog" class="btn btn-primary">글쓰기</a>`;
+    }
 
     async function fetchAndRenderBlog(page) {
         // 이미 로딩 중이거나 더 이상 데이터가 없으면 함수를 즉시 종료
@@ -77,6 +85,7 @@
             } else {
                 loadingIndicator.style.display = 'none';
             }
+            actionButton.innerHTML = actionButtons;
         }
     }
 

@@ -46,7 +46,7 @@
         <div class="container">
             <a href="/index.html" class="nav-brand">🚀 MSA Project</a>
             <div class="nav-links">
-                <a href="/board_list.html" class="nav-link">게시판</a>
+                <a href="/board/board_list.html" class="nav-link">게시판</a>
                 <a href="/blog/blog_list.html" class="nav-link">블로그</a>
             </div>
             <div id="auth-links" class="nav-auth"></div>
@@ -97,9 +97,11 @@
         if (loggedInUser && loggedInUser.id === article.owner_id) {
             actionButtons = `
                 <div>
-                    <a href="/blog/post_form.html?type=blog&id=${article.id}" class="btn btn-primary">수정</a>
+                    <a href="/blog/post_form.html?type=blog" class="btn btn-primary">글쓰기</a> <a href="/blog/post_form.html?type=blog&id=${article.id}" class="btn btn-primary">수정</a>
                     <button id="delete-btn" class="btn btn-danger">삭제</button>
                 </div>`;
+        }else if(loggedInUser){
+            actionButtons = `<a href="/blog/post_form.html?type=blog" class="btn btn-primary">글쓰기</a>`;
         }
 
         const mainImage = image_urls.length > 0 ? `<img src="${image_urls[0]}?t=${new Date().getTime()}" alt="대표 이미지" style="width:100%;cursor: pointer;" onclick="openModal('${image_urls[0]}')">` : '';

@@ -12,7 +12,7 @@
         <div class="container">
             <a href="/index.html" class="nav-brand">🚀 MSA Project</a>
             <div class="nav-links">
-                <a href="/board_list.html" class="nav-link">게시판</a>
+                <a href="/board/board_list.html" class="nav-link">게시판</a>
                 <a href="/blog/blog_list.html" class="nav-link">블로그</a>
             </div>
             <div id="auth-links" class="nav-auth"></div>
@@ -76,7 +76,7 @@
             </div>
             <div class="w3-container w3-padding-large">
                 <h4>자기소개</h4>
-                <p>${profileUser.bio || '작성된 자기소개가 없습니다.'}</p>
+                <p style="white-space: pre-wrap;">${profileUser.bio || '작성된 자기소개가 없습니다.'}</p>
             </div>
         `;
     }
@@ -103,7 +103,7 @@
                 return;
             }
             allPosts.forEach(post => {
-                const link = `/${post.type}_detail.html?id=${post.id}`;
+                const link = `/${post.type}/${post.type}_view.html?id=${post.id}`;
                 const formattedDate = new Date(post.created_at).toLocaleDateString('ko-KR', dateOptions);
                 userPostsList.innerHTML += `
                     <div class="list-item">
