@@ -1,36 +1,42 @@
 graph TD
-    subgraph "사용자 영역"
+    subgraph "외부"
         Client[💻 Client / Browser]
     end
 
-    subgraph "게시판 서비스 (FastAPI)"
-        style BoardService fill:#e6f7ff,stroke:#007bff
-        BoardService[FastAPI Application]
+    subgraph "API Gateway Layer"
+        style Gateway fill:#f8f9fa,stroke:#6c757d
+        Gateway["🌐 API Gateway"]
     end
 
-    subgraph "데이터 저장소"
+    subgraph "Internal Service Layer"
+        style BoardService fill:#e6f7ff,stroke:#007bff
+        style BlogService fill:#d4edda,stroke:#155724
+        BoardService["Board Service"]
+        BlogService["Blog Service"]
+    end
+
+    subgraph "Data Store Layer"
         style DB fill:#e6f3e6,stroke:#28a745
         style Redis fill:#fff0f1,stroke:#dc3545
-        DB["MySQL DB (SQLModel)"]
-        Redis["⚡ Redis (조회수, 동기화 큐)"]
-    end
-
-    subgraph "외부 서비스"
-        style UserService fill:#fff7e6,stroke:#ffc107
-        UserService[👤 User Service]
+        DB["MySQL DB"]
+        Redis["⚡ Redis"]
     end
     
-    subgraph "백그라운드 작업"
+    subgraph "Background Process Layer"
         style SyncWorker fill:#f0e6f7,stroke:#6f42c1
-        SyncWorker[⚙️ Sync Worker]
+        SyncWorker["⚙️ Sync Worker"]
     end
 
-    Client -- API 요청 (HTTP) --> BoardService
+    Client -- "REST API Calls (HTTP)" --> Gateway
 
-    BoardService -- CRUD (게시글) --> DB
-    BoardService -- 작성자 정보 조회 --> UserService
+    Gateway -- "Routing: /api/board/*" --> BoardService
+    Gateway -- "Routing: /api/blog/*" --> BlogService
     
-    BoardService -- "조회수 증가, 큐 추가/제거" --> Redis
+    BoardService -- CRUD --> DB
+    BoardService -- "캐시/큐 처리" --> Redis
 
-    SyncWorker -. "1. 동기화 대상 확인" .-> Redis
-    SyncWorker -. "2. DB에 조회수 업데이트" .-> DB
+    BlogService -- CRUD --> DB
+    BlogService -- "캐시/큐 처리" --> Redis
+
+    SyncWorker -. "동기화 대상 확인" .-> Redis
+    SyncWorker -. "DB에 조회수 업데이트" .-> DB
