@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>자유게시판</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <style>
+        /* ▼▼▼ 이 부분에 .container 스타일을 추가합니다. ▼▼▼ */
+        .container {
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+        .board-container {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            overflow: hidden; /* for border-radius */
+            margin-top: 2rem;
+        }
+        .board-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #e9ecef;
+            margin-top: 40px;
+        }
+        .board-header h1 {
+            margin: 0;
+            font-size: 1.75rem;
+        }
+        .post-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #f1f1f1;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .post-list-item:last-child {
+            border-bottom: none;
+        }
+        .post-list-item:hover {
+            background-color: #f8f9fa;
+        }
+        .post-title a {
+            color: #343a40;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .post-title a:hover {
+            text-decoration: underline;
+        }
+        .post-meta {
+            display: flex;
+            gap: 1.5rem;
+            font-size: 0.85rem;
+            color: #6c757d;
+            text-align: right;
+            flex-shrink: 0; /* 너비가 줄어들지 않도록 */
+        }
+        .post-author { width: 160px; }
+        .post-date { width: 120px; }
+        .pagination {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            padding: 0;
+            margin-top: 2rem;
+        }
+        .pagination li { margin: 0 4px; }
+        .pagination li a {
+            color: #0d6efd;
+            padding: 8px 16px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            text-decoration: none;
+            transition: background-color 0.2s;
+        }
+        .pagination li a:hover { background-color: #e9ecef; }
+        .pagination li.active a {
+            background-color: #0d6efd;
+            color: white;
+            border-color: #0d6efd;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="/index.html" class="nav-brand">🚀 MSA Project</a>
+            <div class="nav-links">
+                <a href="/board/board_list.html" class="nav-link">게시판</a>
+                <a href="/blog_list.html" class="nav-link">블로그</a>
+            </div>
+            <div id="auth-links" class="nav-auth"></div>
+        </div>
+    </nav>
+    <main class="container">
+        <div class="board-container">
+            <div class="board-header">
+                <h1>자유게시판</h1>
+                <a href="/board/board_post.html" class="btn btn-primary">글쓰기</a>
+            </div>
+            <div id="board-list-body">
+                <!-- JS가 목록을 여기에 채웁니다 -->
+            </div>
+        </div>
+        <nav>
+            <ul id="pagination-ul" class="pagination"></ul>
+        </nav>
+    </main>
+    
+    <script src="/assets/js/auth.js"></script>
+    <script>
+        const boardListBody = document.getElementById('board-list-body');
+        const paginationUl = document.getElementById('pagination-ul');
+        const POSTS_PER_PAGE = 10;
+        const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+
+        async function fetchAndRenderBoard(page = 1) {
+            boardListBody.innerHTML = `<div style="padding: 2rem; text-align:center;">로딩 중...</div>`;
+            paginationUl.innerHTML = '';
+            try {
+                const response = await fetch(`/api/board/posts?page=${page}&size=${POSTS_PER_PAGE}`);
+                if (!response.ok) throw new Error(`API 호출 실패: ${response.status}`);
+                const data = await response.json();
+                renderPosts(data.items);
+                renderPagination(data.page, data.pages);
+            } catch (error) {
+                boardListBody.innerHTML = `<div style="padding: 2rem; text-align:center; color:red;">데이터 로딩 실패</div>`;
+            }
+        }
+
+        function renderPosts(posts) {
+            boardListBody.innerHTML = '';
+            if (!posts || posts.length === 0) {
+                boardListBody.innerHTML = `<div style="padding: 2rem; text-align:center;">게시물이 없습니다.</div>`;
+                return;
+            }
+            posts.forEach(post => {
+                const formattedDate = new Date(post.created_at).toLocaleDateString('ko-KR', dateOptions);
+                const postRow = `
+                    <div class="post-list-item">
+                        <div class="post-title">
+                            <a href="/board/board_view.html?id=${post.id}">${post.title}</a>
+                        </div>
+                        <div class="post-meta">
+                            <span class="post-author">${post.author_username || '알 수 없음'}</span>
+                            <span class="post-date">${formattedDate}</span>
+                        </div>
+                    </div>`;
+                boardListBody.insertAdjacentHTML('beforeend', postRow);
+            });
+        }
+
+        function renderPagination(currentPage, totalPages) {
+            paginationUl.innerHTML = '';
+            if (totalPages <= 1) return;
+            for (let i = 1; i <= totalPages; i++) {
+                const li = document.createElement('li');
+                if (i === currentPage) li.classList.add('active');
+                const a = document.createElement('a');
+                a.href = '#';
+                a.innerText = i;
+                a.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    fetchAndRenderBoard(i);
+                });
+                li.appendChild(a);
+                paginationUl.appendChild(li);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderNavbar();
+            fetchAndRenderBoard(1);
+        });
+    </script>
+</body>
+</html>

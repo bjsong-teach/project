@@ -102,19 +102,19 @@
                 </div>`;
         }
 
-        const mainImage = image_urls.length > 0 ? `<img src="${image_urls[0]}?t=${new Date().getTime()}" alt="대표 이미지" style="width:100%" onclick="openModal('${image_urls[0]}')">` : '';
+        const mainImage = image_urls.length > 0 ? `<img src="${image_urls[0]}?t=${new Date().getTime()}" alt="대표 이미지" style="width:100%;cursor: pointer;" onclick="openModal('${image_urls[0]}')">` : '';
         const galleryImages = image_urls.slice(1).map(url => `<img src="${url}?t=${new Date().getTime()}" alt="갤러리 이미지" class="gallery-img" onclick="openModal('${url}')">`).join('');
 
         articleContainer.innerHTML = `
             ${mainImage}
+            ${galleryImages ? `<div class="w3-container image-gallery">${galleryImages}</div>` : ''}
             <div class="w3-container">
                 <h3><b>${article.title}</b></h3>
-                <h5>${author.username || 'Unknown'}, <span class="w3-opacity">${formattedDate}</span></h5>
             </div>
             <div class="w3-container post-content">
                 <p>${article.content}</p>
+                <h5>${author.username || 'Unknown'}, <span class="w3-opacity">${formattedDate}</span></h5>
             </div>
-            ${galleryImages ? `<div class="w3-container image-gallery">${galleryImages}</div>` : ''}
             <div class="w3-container w3-padding-large">
                 <a href="/blog/blog_list.html" class="w3-button w3-border"><b>« 목록으로</b></a>
                 <div style="float: right;">${actionButtons}</div>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>게시물 상세</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <style>
+        .post-view-container { background: #fff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .post-header { padding: 2rem 2.5rem; border-bottom: 1px solid #e9ecef;margin-top: 40px; }
+        .post-header h1 { margin: 0 0 0.5rem 0; font-size: 2.25rem; }
+        .post-meta-info { display: flex; align-items: center; gap: 1rem; color: #6c757d; }
+        .post-body { padding: 2.5rem; font-size: 1.1rem; line-height: 1.8; white-space: pre-wrap; min-height: 300px; }
+        .post-actions { padding: 1.5rem 2.5rem; background-color: #f8f9fa; border-top: 1px solid #e9ecef; display: flex; justify-content: space-between; align-items: center; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="/index.html" class="nav-brand">🚀 MSA Project</a>
+            <div class="nav-links">
+                <a href="/board/board_list.html" class="nav-link">게시판</a>
+                <a href="/blog_list.html" class="nav-link">블로그</a>
+            </div>
+            <div id="auth-links" class="nav-auth"></div>
+        </div>
+    </nav>
+    <main class="container">
+        <div class="post-view-container" id="post-container">
+            <!-- JS가 여기에 내용을 채웁니다 -->
+        </div>
+    </main>
+
+    <script src="/assets/js/auth.js"></script>
+    <script>
+        const postId = new URLSearchParams(window.location.search).get('id');
+        const postContainer = document.getElementById('post-container');
+        const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+
+        async function fetchAndRenderPost(loggedInUser) {
+            postContainer.innerHTML = `<div style="padding: 2rem; text-align:center;">로딩 중...</div>`;
+            try {
+                const response = await fetch(`/api/board/posts/${postId}`);
+                if (!response.ok) throw new Error('게시물을 찾을 수 없습니다.');
+                
+                const data = await response.json();
+                const { post, author, views } = data;
+
+                const formattedDate = new Date(post.created_at).toLocaleDateString('ko-KR', dateOptions);
+
+                let actionButtons = '';
+                if (loggedInUser && loggedInUser.id === post.owner_id) {
+                    actionButtons = `
+                        <div>
+                            <a href="/board/board_post.html?id=${post.id}" class="btn btn-primary">수정</a>
+                            <button id="delete-btn" class="btn btn-danger" style="margin-left: 0.5rem;">삭제</button>
+                        </div>`;
+                }
+
+                postContainer.innerHTML = `
+                    <header class="post-header">
+                        <h1>${post.title}</h1>
+                        <div class="post-meta-info">
+                            <span>작성자: <strong>${author.username || 'Unknown'}</strong></span>
+                            <span>작성일: ${formattedDate}</span>
+                            <span>조회수: ${views}</span>
+                        </div>
+                    </header>
+                    <div class="post-body">${post.content}</div>
+                    <div class="post-actions">
+                        <a href="/board/board_list.html" class="btn btn-secondary">목록으로</a>
+                        ${actionButtons}
+                    </div>`;
+
+                if (document.getElementById('delete-btn')) {
+                    document.getElementById('delete-btn').onclick = async () => {
+                        if (confirm('정말로 이 글을 삭제하시겠습니까?')) {
+                            const delResponse = await fetch(`/api/board/posts/${postId}`, { method: 'DELETE', credentials: 'include' });
+                            if (delResponse.ok) {
+                                alert('삭제되었습니다.');
+                                window.location.href = '/board/board_list.html';
+                            } else {
+                                alert('삭제에 실패했습니다.');
+                            }
+                        }
+                    };
+                }
+            } catch (error) {
+                postContainer.innerHTML = `<div style="padding: 1.5rem;"><h3 style="color:red;">${error.message}</h3></div>`;
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = await getCurrentUser();
+            renderNavbar(user);
+            if (postId) {
+                fetchAndRenderPost(user);
+            } else {
+                postContainer.innerHTML = '<h1>게시물 ID가 없습니다.</h1>';
+            }
+        });
+    </script>
+</body>
+</html>
