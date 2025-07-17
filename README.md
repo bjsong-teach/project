@@ -1,3 +1,4 @@
+```mermaid
 graph TD
     subgraph "외부"
         Client[💻 Client / Browser]
@@ -46,3 +47,4 @@ graph TD
 
     SyncWorker -. "동기화 대상 확인" .-> Redis
     SyncWorker -. "DB에 조회수 업데이트" .-> DB
+```
