@@ -27,10 +27,10 @@ graph TD
 
     Client -- "REST API Calls (with Session Token)" --> Gateway
 
-    Gateway -- "1. Session Check" --> Redis
-    Gateway -- "2. Routing" --> BoardService
-    Gateway -- "2. Routing" --> BlogService
-    Gateway -- "2. Routing" --> UserService
+    Gateway -- "Session Check" --> Redis
+    Gateway -- "Route to Board" --> BoardService
+    Gateway -- "Route to Blog" --> BlogService
+    Gateway -- "Route to User" --> UserService
     
     BoardService -- "작성자 정보 조회" --> UserService
     BlogService -- "작성자 정보 조회" --> UserService
