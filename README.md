@@ -13,30 +13,35 @@ graph TD
         style BoardService fill:#e6f7ff,stroke:#007bff
         style BlogService fill:#d4edda,stroke:#155724
         style UserService fill:#fff7e6,stroke:#ffc107
-        BoardService["<b>Board Service</b><br/>- REST API<br/>- <i>APScheduler for DB Sync</i>"]
-        BlogService["<b>Blog Service</b><br/>- REST API<br/>- <i>APScheduler for DB Sync</i>"]
+        BoardService["<b>Board Service</b><br/>- REST API<br/>- <i>APScheduler</i>"]
+        BlogService["<b>Blog Service</b><br/>- REST API<br/>- <i>APScheduler</i>"]
         UserService["<b>👤 User Service</b>"]
     end
 
     subgraph "Data Store Layer"
-        style DB fill:#e6f3e6,stroke:#28a745
+        style UserDB fill:#fffbe6,stroke:#ffc107
+        style BoardDB fill:#e6f7ff,stroke:#007bff
+        style BlogDB fill:#d4edda,stroke:#155724
         style Redis fill:#fff0f1,stroke:#dc3545
-        DB["<b>MySQL DB</b><br/>- Posts, Users Data"]
-        Redis["<b>⚡ Redis</b><br/>- <i>Session Store</i><br/>- View Count Cache<br/>- Sync Queue"]
+        UserDB["<b>User DB</b><br/>(MySQL)"]
+        BoardDB["<b>Board DB</b><br/>(MySQL)"]
+        BlogDB["<b>Blog DB</b><br/>(MySQL)"]
+        Redis["<b>⚡ Redis</b><br/>- Session Store<br/>- Cache & Queue"]
     end
 
-    Client -- "REST API Calls (with Session Token)" --> Gateway
+    Client -- "REST API Calls" --> Gateway
 
     Gateway -- "Session Check" --> Redis
-    Gateway -- "Route to Board" --> BoardService
-    Gateway -- "Route to Blog" --> BlogService
-    Gateway -- "Route to User" --> UserService
+    Gateway -- "Route" --> BoardService
+    Gateway -- "Route" --> BlogService
+    Gateway -- "Route" --> UserService
     
-    BoardService -- "작성자 정보 조회" --> UserService
-    BlogService -- "작성자 정보 조회" --> UserService
+    UserService -- CRUD --> UserDB
+    BoardService -- "작성자 정보 조회 (API 호출)" --> UserService
+    BlogService -- "작성자 정보 조회 (API 호출)" --> UserService
 
-    BoardService -- "CRUD & Periodic Sync" --> DB
-    BlogService -- "CRUD & Periodic Sync" --> DB
+    BoardService -- "CRUD & Sync" --> BoardDB
+    BlogService -- "CRUD & Sync" --> BlogDB
 
     BoardService -- "캐시/큐 처리" --> Redis
     BlogService -- "캐시/큐 처리" --> Redis
