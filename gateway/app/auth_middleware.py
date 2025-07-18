@@ -10,14 +10,16 @@ USER_SERVICE_URL = os.getenv("USER_SERVICE_URL")
 
 class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
-        
+        print("✅ 요청 처리 시작!")
         public_paths = ["/api/auth/login", "/api/auth/register"]
-        
-        if request.method in ("GET", "OPTIONS") or request.url.path in public_paths:
+        print("--- Modified Headers (request) ---")
+        print(request.headers)
+        print("--------------------------------------")
+        if request.method in ("GET","OPTIONS") or request.url.path in public_paths:
             return await call_next(request)
 
         session_id = request.cookies.get("session_id")
-        #print(f"Request received: {request.method} {request.url.path}")
+        print(f"Request received: {request.method} {request.url.path}")
         if not session_id:
             return JSONResponse(status_code=401, content={"detail": "Not authenticated"})
         try:
@@ -40,7 +42,8 @@ class AuthMiddleware(BaseHTTPMiddleware):
             return JSONResponse(status_code=503, content={"detail": "User service is unavailable"})
 
         response = await call_next(request)
-        print("--- Modified Headers (new_headers) ---")
-        print(new_headers)
+        
+        print("--- Modified Headers (request.headers) ---")
+        print(request.headers)
         print("--------------------------------------")
         return response

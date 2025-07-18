@@ -27,7 +27,7 @@ async def sync_redis_to_mysql():
     """
     1분마다 실행되며, Redis의 조회수를 MySQL에 동기화하는 메인 함수입니다.
     """
-    #logging.info("조회수 동기화 작업 시작")
+    logging.info("조회수 동기화 작업 시작")
     
     redis_client = None
     try:
