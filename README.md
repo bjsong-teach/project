@@ -6,7 +6,7 @@ graph TD
 
     subgraph "API Gateway Layer"
         style Gateway fill:#f8f9fa,stroke:#6c757d
-        Gateway["<b>🌐 API Gateway</b><br/>- Routing<br/>- <i>Authentication / Session Handling</i>"]
+        Gateway["<b>🌐 API Gateway</b><br/>- Routing<br/>- <i>Authentication Delegation</i>"]
     end
 
     subgraph "Internal Service Layer"
@@ -15,7 +15,7 @@ graph TD
         style UserService fill:#fff7e6,stroke:#ffc107
         BoardService["<b>Board Service</b><br/>- REST API<br/>- <i>APScheduler</i>"]
         BlogService["<b>Blog Service</b><br/>- REST API<br/>- <i>APScheduler</i>"]
-        UserService["<b>👤 User Service</b>"]
+        UserService["<b>👤 User Service</b><br/>- <i>Authentication Logic</i>"]
     end
 
     subgraph "Data Store Layer"
@@ -26,15 +26,14 @@ graph TD
         UserDB["<b>User DB</b><br/>(MySQL)"]
         BoardDB["<b>Board DB</b><br/>(MySQL)"]
         BlogDB["<b>Blog DB</b><br/>(MySQL)"]
-        Redis["<b>⚡ Redis</b><br/>- Session Store<br/>- Cache & Queue"]
+        Redis["<b>⚡ Redis</b><br/>- Cache & Queue"]
     end
 
-    Client -- "REST API Calls" --> Gateway
+    Client -- "REST API Calls (with Cookie)" --> Gateway
 
-    Gateway -- "Session Check" --> Redis
+    Gateway -- "인증 위임 (API 호출)" --> UserService
     Gateway -- "Route" --> BoardService
     Gateway -- "Route" --> BlogService
-    Gateway -- "Route" --> UserService
     
     UserService -- CRUD --> UserDB
     BoardService -- "작성자 정보 조회 (API 호출)" --> UserService
