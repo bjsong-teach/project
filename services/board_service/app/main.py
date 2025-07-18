@@ -149,6 +149,7 @@ async def update_post(
 async def delete_post(
     post_id: int,
     session: Annotated[AsyncSession, Depends(get_session)],
+    redis: Annotated[redis.Redis, Depends(get_redis)],
     x_user_id: Annotated[int, Header(alias="X-User-Id")],
 ):
     """게시글을 삭제합니다."""

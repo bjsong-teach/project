@@ -35,11 +35,12 @@ class AuthMiddleware(BaseHTTPMiddleware):
                 
                 new_headers["X-User-Id"] = user_id
                 request.scope["headers"] = new_headers.raw
-                print("--- Modified Headers (new_headers) ---")
-                print(new_headers)
-                print("--------------------------------------")
+                
         except httpx.RequestError:
             return JSONResponse(status_code=503, content={"detail": "User service is unavailable"})
 
         response = await call_next(request)
+        print("--- Modified Headers (new_headers) ---")
+        print(new_headers)
+        print("--------------------------------------")
         return response

@@ -1,5 +1,5 @@
-from typing import Optional, List
-from sqlmodel import Field, SQLModel
+from typing import List
+from sqlmodel import SQLModel
 
 class PaginatedResponse(SQLModel):
   total: int
